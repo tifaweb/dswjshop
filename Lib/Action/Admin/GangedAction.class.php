@@ -30,7 +30,7 @@ class GangedAction extends AdminCommAction {
 			$pname='后台栏目分组';
 			break;
 		}
-		$list=$unite->where('`pid`='.$id)->select();
+		$list=$unite->where('`pid`="'.$id.'"')->select();
 		$this->assign('list',$list);
 		$this->assign('pname',$pname);
 		$endjs='
@@ -60,7 +60,7 @@ function edit(id){
     public function editajax(){
 		$unite=D('Unite');
 		$id=$this->_post("id");
-		$list=$unite->where('`id`='.$id)->find();
+		$list=$unite->where('`id`="'.$id.'"')->find();
 		echo '
 			<table class="table">
         <tbody>
@@ -85,10 +85,6 @@ function edit(id){
                 <label class="radio"><input type="radio" name="state" value="1" checked/> 隐藏</label>';
 			}
             echo '</td>
-          </tr>
-          <tr>
-            <td> 排序：</td>
-            <td><input name="order" type="text" class="span2" value="5" value="'.$list['order'].'"></td>
           </tr>
 		  <input name="sid" type="hidden" value="'.$id.'" />
         </tbody>      

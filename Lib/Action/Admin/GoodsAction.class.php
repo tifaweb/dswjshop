@@ -37,7 +37,7 @@ class GoodsAction extends AdminCommAction {
 		foreach($goodslists as $g){
 			if(!in_array($g['id'],$dat)){
 				$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
-				$good=M('goodslist')->where('`pid`='.$g['id'])->order('`pid` ASC,`id` DESC')->select();
+				$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
 				if($good){
 					foreach($good as $go){
 						$arr.='<option value="'.$go['id'].'">&nbsp;└'.$go['title'].'</option>';
@@ -132,7 +132,7 @@ class GoodsAction extends AdminCommAction {
             if($id<1){
 				$this->error("操作有误");
 			}
-			$list=M('goods')->where('`id`='.$id)->find();
+			$list=M('goods')->where('`id`="'.$id.'"')->find();
 			$list['img']=json_decode($list['img'], true);
 			$list['attribute']=json_decode($list['attribute'], true);
 			$list['scount']=$scount=count($list['attribute']['size']);//尺寸数
@@ -178,7 +178,7 @@ class GoodsAction extends AdminCommAction {
 					}else{
 						$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
 					}
-					$good=M('goodslist')->where('`pid`='.$g['id'])->order('`pid` ASC,`id` DESC')->select();
+					$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
 					if($good){
 						foreach($good as $go){
 							if($g['id']==$list['fid']){
@@ -256,13 +256,13 @@ class GoodsAction extends AdminCommAction {
     public function delego(){
 		$id=$this->_get("id");
 		$integral=M('Goods');
-		$inte=$integral->field('img')->where('id='.$id)->find();
+		$inte=$integral->field('img')->where('id="'.$id.'"')->find();
 		$img=array_filter(explode(',',$inte['img']));
 		foreach($img as $i){	//先删除对应的图片
 			unlink('./Public/uploadify/uploads/commodity/'.$i);	//删除它
 		}
 		
-		$result=$integral->where('id='.$id)->delete();	//再删除该条数据
+		$result=$integral->where('id="'.$id.'"')->delete();	//再删除该条数据
 		if($result){
 			F('cart',NULL);//删除用户购物车缓存
 			$this->success('删除成功');
@@ -336,7 +336,7 @@ class GoodsAction extends AdminCommAction {
 		}
 		
 		if(is_numeric($this->_get('state'))){
-			$where.=" and `state`=".$this->_get('state');
+			$where.=' and `state`="'.$this->_get('state').'"';
 		}
 		
 		if($this->_get('starttime')>0){
@@ -436,7 +436,7 @@ class GoodsAction extends AdminCommAction {
 		if($this->_get('id')<1){
 			$this->error('参数有误');
 		}
-		$indent=D('Indent')->relation('erector')->where('`id`='.$this->_get('id'))->find();
+		$indent=D('Indent')->relation('erector')->where('`id`="'.$this->_get('id').'"')->find();
 		$details=json_decode($indent['details'], true);
 		$indent['information']=json_decode($indent['information'], true);
 		$indent['total']=$details['total'];
@@ -499,22 +499,22 @@ class GoodsAction extends AdminCommAction {
 			$arr['express']=$this->_post('express');
 			$arr['state']=3;
 			$arr['cnumber']=$this->_post('cnumber');
-			M('indent')->where('`id`='.$this->_post('id'))->save($arr);
+			M('indent')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$this->Record('发货成功');//后台操作
 			$this->success('已成功发货','__APP__/TIFAWEB_DSWJCMS/Goods/records.html');
 		}else if($this->_post('cancel')==1){	//取消订单
 			$arr['state']=5;
-			M('indent')->where('`id`='.$this->_post('id'))->save($arr);
+			M('indent')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$this->Record('订单取消成功');//后台操作
 			$this->success('订单取消成功','__APP__/TIFAWEB_DSWJCMS/Goods/records.html');
 		}else if($this->_post('cancel')==2){	//取消订单(用户已付款)
 			$arr['state']=5;
-			M('indent')->where('`id`='.$this->_post('id'))->save($arr);
+			M('indent')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$this->Record('订单取消成功');//后台操作
 			$this->success('订单取消成功','__APP__/TIFAWEB_DSWJCMS/Goods/records.html');
 		}else if($this->_post('collection')==1){	//关闭交易
 			$arr['state']=4;
-			M('indent')->where('`id`='.$this->_post('id'))->save($arr);
+			M('indent')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$total=$this->_post('total');
 			$models = new Model();
 			$models->query("UPDATE `ds_money` SET `total_money` = `total_money`+".$total.", `available_funds` = `available_funds`+".$total." WHERE `uid` =".$this->_post('uid'));
@@ -525,7 +525,7 @@ class GoodsAction extends AdminCommAction {
 			$this->Record('订单关闭成功');//后台操作
 			$this->success('订单关闭成功','__APP__/TIFAWEB_DSWJCMS/Goods/records.html');
 		}else{
-			M('indent')->where('`id`='.$this->_post('id'))->save($arr);
+			M('indent')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$this->Record('订单修改成功');//后台操作
 			$this->success('修改成功');
 		}
@@ -536,7 +536,7 @@ class GoodsAction extends AdminCommAction {
 		$goodslist=M('goodslist')->order('`pid` ASC,`id` DESC')->select();
 		foreach($goodslist as $id=>$g){
 			if($g['pid']>0){
-				$goodslist[$id]['pname']=M('goodslist')->where('`id`='.$g['pid'])->getField('title');
+				$goodslist[$id]['pname']=M('goodslist')->where('`id`="'.$g['pid'].'"')->getField('title');
 			}else{
 				$goodslist[$id]['pname']='顶级类目';
 			}
@@ -547,7 +547,7 @@ class GoodsAction extends AdminCommAction {
 	
 	//类目添加/编辑页
 	public function category_page(){
-		$list=M('goodslist')->where('`id`='.$this->_get('id'))->find();
+		$list=M('goodslist')->where('`id`="'.$this->_get('id').'"')->find();
 		$goodslist=M('goodslist')->order('`pid` ASC,`id` DESC')->select();
 		foreach($goodslist as $id=>$g){
 			$goodslists[$g['id']]=$g;
@@ -564,7 +564,7 @@ class GoodsAction extends AdminCommAction {
 					}else{
 					$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
 					}
-					$good=M('goodslist')->where('`pid`='.$g['id'])->order('`pid` ASC,`id` DESC')->select();
+					$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
 					if($good){
 						foreach($good as $go){
 							if($go['id']==$list['pid']){
@@ -582,7 +582,7 @@ class GoodsAction extends AdminCommAction {
 			foreach($goodslists as $g){
 				if(!in_array($g['id'],$dat)){
 					$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
-					$good=M('goodslist')->where('`pid`='.$g['id'])->order('`pid` ASC,`id` DESC')->select();
+					$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
 					if($good){
 						foreach($good as $go){
 							$arr.='<option value="'.$go['id'].'">&nbsp;└'.$go['title'].'</option>';
@@ -603,7 +603,7 @@ class GoodsAction extends AdminCommAction {
 		$arr['pid']=$this->_post('pid');
 		$arr['title']=$this->_post('title');
 		if($this->_post('id')>0){//编辑
-			M('goodslist')->where('`id`='.$this->_post('id'))->save($arr);
+			M('goodslist')->where('`id`="'.$this->_post('id').'"')->save($arr);
 			$this->Record('类目修改成功');
 			$this->success('修改成功');
 		}else{//添加

@@ -27,28 +27,29 @@ class GoodsAction extends AdminCommAction {
 	
 	//商品添加页
 	public function addgoo(){
-		$goodslist=M('goodslist')->order('`pid` ASC,`id` DESC')->select();
-		foreach($goodslist as $id=>$g){
-			$goodslists[$g['id']]=$g;
-		}
-		
-		unset($g);
-		unset($id);
-		foreach($goodslists as $g){
-			if(!in_array($g['id'],$dat)){
-				$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
-				$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
-				if($good){
-					foreach($good as $go){
-						$arr.='<option value="'.$go['id'].'">&nbsp;└'.$go['title'].'</option>';
-						$dat[$go['id']]=$go['id'];
-					}
-					
-				}
-			}
-		}
-		$this->assign('arr',$arr);
+		$goodslist=M('goodslist')->where('pid=0')->order('`id` ASC')->select();
+		$this->assign('arr',$goodslist);
 		$this->display();
+	}
+	
+	//商品类目AJAX
+	public function ajaxGoodslist(){
+		$v=$this->_post('v');
+		$p=$this->_post('p');
+		$goodslist=M('goodslist')->where('pid='.$v)->order('`id` ASC')->select();
+		if($goodslist){
+			$con.='
+				<select name="fid" class="span2" data="'.$p.'">
+                <option value="'.$v.'">不限</option>
+			';
+			foreach($goodslist as $id=>$g){
+				$con.='<option  onclick="ajaxGoodslist(this,'.$g['id'].')" value="'.$g['id'].'">'.$g['title'].'</option>';
+			}
+			$con.='
+                </select>
+			';
+		}
+		$this->ajaxReturn(1,$con,1);
 	}
 	
 	//商品添加
@@ -73,7 +74,7 @@ class GoodsAction extends AdminCommAction {
 			if(!$this->_post('price')){
 				$this->error("商品价格必须");
 			}
-			
+			$arr['market']=$this->_post('market');
 			$arr['price']=$this->_post('price');
 			$arr['color']=$this->_post('nameA');
 			$arr['size']=$this->_post('nameB');
@@ -82,8 +83,15 @@ class GoodsAction extends AdminCommAction {
 			if(count($arr['price'])>1){
 				asort($arr['price']);
 				$create['price']=current($arr['price']);
+				list($key, $value) = each($arr['price']);
 			}else{
 				$create['price']=$arr['price'][0];
+			}
+			//市场价
+			if(count($arr['market'])>1){
+				$create['market']=$arr['market'][$key];
+			}else{
+				$create['market']=$arr['market'][0];
 			}
 			$create['attribute']=json_encode ($arr); 
 			$create['zimg']=$this->_post('i_img');
@@ -150,6 +158,7 @@ class GoodsAction extends AdminCommAction {
 						$attributes.='		
 								  
 								  <td class="G'.($i+1).'">'.$si.'</td>
+								  <td><input name="market[]" type="text" value="'.$list['attribute']['market'][$j].'"/></td>
 								  <td><input name="price[]" type="text" value="'.$list['attribute']['price'][$j].'"/></td>
 								  <td><input name="stock[]" type="text" value="'.$list['attribute']['stock'][$j].'" /></td>
 								</tr>
@@ -164,37 +173,41 @@ class GoodsAction extends AdminCommAction {
 			$list['attributes']=$attributes;
 			$this->assign('list',$list);
 			//类目
-			$goodslist=M('goodslist')->order('`pid` ASC,`id` DESC')->select();
-			foreach($goodslist as $id=>$g){
-				$goodslists[$g['id']]=$g;
-			}
-			
-			unset($g);
-			unset($id);
-			foreach($goodslists as $g){
-				if(!in_array($g['id'],$dat)){
-					if($g['id']==$list['fid']){
-						$arr.='<option value="'.$g['id'].'" selected>'.$g['title'].'</option>';
-					}else{
-						$arr.='<option value="'.$g['id'].'">'.$g['title'].'</option>';
-					}
-					$good=M('goodslist')->where('`pid`="'.$g['id'].'"')->order('`pid` ASC,`id` DESC')->select();
-					if($good){
-						foreach($good as $go){
-							if($g['id']==$list['fid']){
-								$arr.='<option value="'.$go['id'].'" selected>&nbsp;└'.$go['title'].'</option>';
-							}else{
-								$arr.='<option value="'.$go['id'].'">&nbsp;└'.$go['title'].'</option>';
-							}
-							$dat[$go['id']]=$go['id'];
-						}
-						
-					}
-				}
-			}
+			$arr=$this->superiorGoodslist($list['fid']);
 			$this->assign('arr',$arr);
             $this->display();
     }
+	
+	//查找上级类目
+	public function superiorGoodslist($id,$p=1,$arr=''){
+		$list=M('goodslist')->where('id='.$id)->find();
+		$goodslist=M('goodslist')->where('pid='.$list['pid'])->order('`id` ASC')->select();
+		if($goodslist){
+			$arrs.='
+				<select name="fid" class="span2" data="'.$p.'">
+                <option value="'.$list['pid'].'">不限</option>
+			';
+			foreach($goodslist as $id=>$g){
+				if($list['id']==$g['id']){
+					$arrs.='<option  onclick="ajaxGoodslist(this,'.$g['id'].')" value="'.$g['id'].'" selected>'.$g['title'].'</option>';
+				}else{
+					$arrs.='<option  onclick="ajaxGoodslist(this,'.$g['id'].')" value="'.$g['id'].'">'.$g['title'].'</option>';
+				}
+				
+			}
+			$arrs.='
+                </select>
+			';
+			return $this->superiorGoodslist($list['pid'],$p+1,$arrs.$arr);
+		}
+		return $arr;
+		
+	}
+	
+	//查看所胡父类目
+	public function fatherGoodslist($id){
+		
+	}
 	
 	 //商品编辑保存
     public function editgo(){
@@ -218,7 +231,7 @@ class GoodsAction extends AdminCommAction {
 			if(!$this->_post('price')){
 				$this->error("商品价格必须");
 			}
-			
+			$arr['market']=$this->_post('market');
 			$arr['price']=$this->_post('price');
 			$arr['color']=$this->_post('nameA');
 			$arr['size']=$this->_post('nameB');
@@ -227,10 +240,19 @@ class GoodsAction extends AdminCommAction {
 			if(count($arr['price'])>1){
 				asort($arr['price']);
 				$create['price']=current($arr['price']);
+				list($key, $value) = each($arr['price']);
 			}else{
 				$create['price']=$arr['price'][0];
 			}
+			
+			//市场价
+			if(count($arr['market'])>1){
+				$create['market']=$arr['market'][$key];
+			}else{
+				$create['market']=$arr['market'][0];
+			}
 			$create['attribute']=json_encode ($arr); 
+			
 			$create['zimg']=$this->_post('i_img');
 			//生成缩略图
 			$this->addgoimg($this->_post('i_img'));

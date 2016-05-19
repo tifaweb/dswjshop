@@ -24,7 +24,7 @@
     <tbody>
         <tr>
             <td><span class="red">*</span>商品名称：</td>
-            <td><input name="title" type="text" class="span5" placeholder="请输入商品名称..." value="{$list.title}"  maxlength="12"></td>
+            <td><input name="title" type="text" class="span5" placeholder="请输入商品名称..." value="{$list.title}"  maxlength="30"></td>
         </tr>
         <tr>
             <td><span class="red">*</span>编号： </td>
@@ -43,6 +43,10 @@
                  <input class="file_url" type="hidden" value="__PUBLIC__/uploadify/uploads/commodity/"/>
                 <input data-no-uniform="true" type="file" id="file_upone" />            
             </td>
+        </tr>
+        <tr>
+            <td>标签： </td>
+            <td><input name="keyword" type="text" class="span8" placeholder="以半角逗号分割','，标签可用于属性筛选"  value="{$list.keyword}" maxlength="100" ></td>
         </tr>
         <tr>
             <td>说明： </td>
@@ -109,6 +113,7 @@
                     <tr>
                       <th>颜色</th>
                       <th>尺寸</th>
+                      <th>市场价</th>
                       <th>价格</th>
                       <th>库存</th>
                     </tr>
@@ -135,7 +140,7 @@
 					$("input[name=valueB]").each(function() {
 						if(i>1){
 						var v=$(this).val(); 
-						AA+='<tr class="F'+i+'"> <td class="G'+v+'">'+$('#nameB'+v).val()+'</td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>';
+						AA+='<tr class="F'+i+'"> <td class="G'+v+'">'+$('#nameB'+v).val()+'</td><td><input name="market[]" type="text" /></td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>';
 						}
 						i++;
 					});
@@ -143,14 +148,14 @@
 					i=1;
 					
 					
-					$('#D').append('<tbody class="EE C'+A+'"><tr class="E F1"><td rowspan="'+(B-1)+'" class="C" id="C'+A+'"></td><td class="G1">'+$('#nameB1').val()+'</td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>'+AA+'</tbody>');
+					$('#D').append('<tbody class="EE C'+A+'"><tr class="E F1"><td rowspan="'+(B-1)+'" class="C" id="C'+A+'"></td><td class="G1">'+$('#nameB1').val()+'</td><td><input name="market[]" type="text" /></td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>'+AA+'</tbody>');
 					AA=0;
 					A++;
 				}else{	//尺寸
 					$('#addB').append('<tr id="deleteB_'+B+'"><td><input name="nameB[]"  id="nameB'+B+'" type="text" onBlur="update(2,'+B+',this)"/><input name="valueB" type="hidden" value="'+B+'" /></td><td><a href="javascript:void(0)" onclick="dele(2,'+B+')">删除</a></td></tr>');
 					$('.C').attr('rowspan',B);
 					
-					$('.EE').append('<tr class="F'+B+'"> <td  class="G'+B+'"></td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>');
+					$('.EE').append('<tr class="F'+B+'"> <td  class="G'+B+'"></td><td><input name="market[]" type="text" /></td><td><input name="price[]" type="text" /></td><td><input name="stock[]" type="text" /></td></tr>');
 					B++;
 				}
 			}
@@ -164,6 +169,7 @@
 						$('#deleteB_'+id).remove();
 						$('.F'+id).remove();
 						var CC=$('.C').attr('rowspan');
+						B--;
 						CC=parseInt(CC)-1;
 						//B=parseInt(B)-1;
 						$('.C').attr('rowspan',CC);
@@ -202,10 +208,9 @@
         <tr>
             <td><span class="red">*</span>所属类目：</td>
             <td>
-            	<select name="fid" class="span2">
-                <option value="">请选择</option>
-				{$arr}
-                </select>
+            	<span  id="fid">
+            	{$arr}
+                </span>
                 <a data-toggle="modal" href="#audit" onclick="ajaxcategory()">添加</a>
             </td>
         </tr>
@@ -334,4 +339,24 @@ $(document).ready(function(){
 	
 })
 
+</script>
+<script>
+//类目选择
+function ajaxGoodslist(t,v){
+	var p=$(t).parent().attr('data');
+	p=parseInt(p)-1;
+	$("#fid select").each(function(){
+	   if($(this).attr('data')<=p){
+			$(this).remove(); 
+	   }
+	});
+	$.ajax({
+	   type: "POST",
+	   url: "__APP__/TIFAWEB_DSWJCMS/Goods/ajaxGoodslist.html",
+	   data: {v:v,p:p},
+	   success: function(msg){
+		  $('#fid').append(msg.info);
+	   }
+	});
+}
 </script>

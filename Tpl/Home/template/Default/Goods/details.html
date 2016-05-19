@@ -19,6 +19,14 @@
             div.zoomDiv{z-index:999;position:absolute;top:0px;left:0px;width:500px;height:200px;background:#ffffff;border:1px solid #CCCCCC;display:none;text-align:center;overflow:hidden;}
             div.zoomMask{position:absolute;background:url("__PUBLIC__/jc/images/mask.png") repeat scroll 0 0 transparent;cursor:move;z-index:1;}
 			img {max-width: none}
+			#goods-cart-inform{
+				position: fixed;
+				z-index: 10;
+				left:50%;
+				top: 50%;
+				display: none;
+			}
+			#goods-cart-inform span{width:200px;border: 3px solid #ccc;	padding: 10px;color: #FFF;font-size: 16px;background-color: #999;}
 </style>
 <!--头部 end -->
 <!-- start main -->
@@ -93,6 +101,7 @@
                   <form id="form" onsubmit="return false">
 					<h3>{$goods.title}</h3>
 					<p class="red">{$goods.instructions}</p>
+                    <p>市场价：￥<span id="unitPriceId" style="text-decoration: line-through;">{$goods.market|number_format=2,'.',','}</span></p>
 					<h5>单价：￥<span id="unit">{$goods.price|number_format=2,'.',','}</span><input id="units" name="price" type="hidden" value="{$goods.price}" /></h5>
 					<div class="available">
 						<div class="tb_skin">
@@ -167,6 +176,16 @@
                     </form>
 					<script>
 					function cart(){
+						var A=$('#A').val();	//颜色
+						var B=$('#B').val();	//尺寸
+						if(!A){
+							alert('请先选择颜色分类');
+							return false;
+						}
+						if(!B){
+							alert('请先选择尺寸');
+							return false;
+						}
 						var data=$("#form input").map(function(){
 						return ($(this).attr("name")+'='+$(this).val());
 						}).get().join("&") ;
@@ -175,8 +194,16 @@
 						   url: "__ROOT__/Goods/ajaxcart.html",
 						   data: data,
 						   success: function(msg){
-							   
-							  location.reload();
+							   if(msg.status==1){
+									$('#goods-cart-inform').show();
+									$('#goods-cart-inform span').html(msg.info);
+									setTimeout(function () {
+										location.reload();
+									}, 1000);
+									
+								}else{
+								  alert(msg.info);
+								}
 						   }
 						});
 					}
@@ -252,13 +279,14 @@
 </div>
 </div>		
 <!-- start footer -->
+<div id="goods-cart-inform"><span></span></div>
 <include file="Index:footer" />
 <script>
 //选择
 function switchs(type,id,t){
 	var size=$('#B').val();
 	var color=$('#A').val();
-	var goodid={$goods.id};
+	var goodid='{$goods.id}';
 	if(type==1){	//颜色
 		$('#color a').removeClass('focus');
 		$('#A').val(id);
@@ -276,9 +304,9 @@ function switchs(type,id,t){
 	   success: function(msg){
 		   if(msg.status==1){
 			 $('#stock_em').html('[库存<span id="stock_num">'+msg.info+'</span>件]');
-			 $('#stock').val(msg.info);
-			 $('#unit').html(msg.data);
-			 $('#units').val(msg.data);
+			 $('#unit').html(msg.data.price);
+			  $('#units').val(msg.data.price.replace(/,/gi,''));
+			 $('#unitPriceId').html(msg.data.market);
 		   }else{
 			 alert(msg.info);
 		   }
@@ -290,6 +318,16 @@ function calculation(type){
 	var strP=/^\d+$/;
 	var stock=$('#stock').val();//库存
 	var numb=$('#number').val();//数量
+	var A=$('#A').val();	//颜色
+	var B=$('#B').val();	//尺寸
+	if(!A){
+		alert('请先选择颜色分类');
+		return false;
+	}
+	if(!B){
+		alert('请先选择尺寸');
+		return false;
+	}
 	if(type==1){	//加
 		if(parseInt(numb)<stock){
 			$('#number').val(parseInt(numb)+1);

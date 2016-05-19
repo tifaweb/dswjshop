@@ -38,7 +38,21 @@ class GoodsAction extends HomeAction {
 			}else{
 				$where="`title`=''";
 			}
-			$site['title'].="搜索";
+			//分类商品
+			if($this->_get('fid')){
+				function goodslistSubclass($fid,$a=''){
+					$goodslist=M('goodslist')->where(array('pid'=>$fid))->select();
+					if($goodslist){
+						foreach($goodslist as $g){
+							$a=$a.' or fid='.goodslistSubclass($g['id'],$g['id']);
+						}
+					}
+					return $a;
+				}
+				$site['title']='分类商品';
+			}else{
+				$site['title'].="搜索";
+			}
 			break;
 		}
 		$site['link']=1;
@@ -67,6 +81,14 @@ class GoodsAction extends HomeAction {
 		$this->assign('sales',$sales);
 		//添加访问量
 		M('goods')->where('`id`="'.$this->_get('id').'"')->setInc('sentiment',1);
+		
+		//标题、关键字、描述
+		$si['link']=1;
+		$si['title']=$goods['title'];
+		$si['remark']=$goods['instructions']?$goods['instructions']:$goods['title'];
+		$si['keyword']=$goods['keyword']?$goods['keyword']:$goods['title'];
+		$si['link']=1;
+		$this->assign('si',$si);
 		$this->display();
 	}
 	
@@ -81,12 +103,16 @@ class GoodsAction extends HomeAction {
 		$ccount=count($attribute['color']);//颜色数
 		$p=$this->_post('color')*$scount+$this->_post('size');
 		$stock=$attribute['stock'][$p];
-		$price=number_format($attribute['price'][$p],2,'.',',');
-		$this->ajaxReturn($price,$stock,1);
+		$arr['price']=number_format($attribute['price'][$p],2,'.',',');
+		$arr['market']=number_format($attribute['market'][$p],2,'.',',');
+		$this->ajaxReturn($arr,$stock,1);
 	}
 	
 	//购物车（商品购买）
 	public function ajaxcart(){
+		if(!is_numeric($this->_post('color')) || !is_numeric($this->_post('size'))){
+			$this->ajaxReturn(0,'参数有误',0);
+		}
 		$this->homeVerify();
 		$c=$_SESSION['cart'];
 		$uid=$this->_session('user_uid');
@@ -135,7 +161,7 @@ class GoodsAction extends HomeAction {
 			session('amount',$cart['amount']);
 		}
 		
-		
+		$this->ajaxReturn(1,'已成功加入购物车',1);
 	}
 	
 	//购物车

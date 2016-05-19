@@ -21,6 +21,7 @@
                 <th>ID</th>
                 <th>编号</th>
                 <th>商品名</th>
+                <th>市场价</th>
                 <th>价格</th>
                 <th>栏目</th>
                 <th>状态</th>
@@ -35,6 +36,7 @@
                 <td>{$vo.id}</td>
                 <td>{$vo.number}</td>
                 <td>{$vo.title}</td>
+                <td>{$vo.market|number_format=2,'.',','}元</td>
                 <td>{$vo.price|number_format=2,'.',','}元</td>
                 <td>{$vo.fname}</td>
                 <td class="form-inline">

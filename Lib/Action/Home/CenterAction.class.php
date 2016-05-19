@@ -292,6 +292,7 @@ class CenterAction extends HomeAction {
 		}
 		
 			/*Dswjcmsalipay end*/
+			
 					
 				}
 				$result = $recharge->add($create);
@@ -504,10 +505,13 @@ class CenterAction extends HomeAction {
 		$active['center']='active';
 		$this->assign('active',$active);
 		import('ORG.Util.Page');
-		$count      =M('indent')->where('`uid`="'.$this->_session('user_uid').'"')->count();
+		if($this->_get('state')){
+			$where=' and state="'.$this->_get('state').'"';
+		}
+		$count      =M('indent')->where('`uid`="'.$this->_session('user_uid').'"'.$where)->count();
 		$Page       = new Page($count,10);
 		$show       = $Page->show();
-		$indent=M('indent')->where('`uid`="'.$this->_session('user_uid').'"')->limit($Page->firstRow.','.$Page->listRows)->order('`time` DESC')->select();
+		$indent=M('indent')->where('`uid`="'.$this->_session('user_uid').'"'.$where)->limit($Page->firstRow.','.$Page->listRows)->order('`time` DESC')->select();
 		
 		if($indent){
 			foreach($indent as $i){
@@ -652,6 +656,8 @@ class CenterAction extends HomeAction {
 	}
 	
 	
+			
+			
 			/*Dswjcmsalipay start*/
 			
 	//支付宝跳转页

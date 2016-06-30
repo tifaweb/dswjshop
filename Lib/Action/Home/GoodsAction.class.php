@@ -378,6 +378,12 @@ class GoodsAction extends HomeAction {
 		$money=M('money')->field('total_money,available_funds,freeze_funds')->where('`uid`="'.$this->_session('user_uid').'"')->find();
 		if($money['available_funds']>=$this->_post('deposit')){
 			$delivery=M('delivery')->where('`id`="'.$this->_post('default').'"')->find();
+			//销量增加
+			$indent=M('indent')->where(array('id'=>$this->_post('id')))->find();
+			$details=json_decode($indent['details'], true);
+			foreach($details as $d){
+				M('goods')->where(array('id'=>$d['id']))->setInc('sales',1);
+			}
 			M('indent')->where(array('id'=>$this->_post('id')))->save(array('information'=>$delivery['information'],'state'=>2));
 			$models = new Model();
 			$models->query("UPDATE `ds_money` SET `total_money` = `total_money`-".$this->_post('deposit').", `available_funds` = `available_funds`-".$this->_post('deposit')." WHERE `uid` =".$this->_session('user_uid'));

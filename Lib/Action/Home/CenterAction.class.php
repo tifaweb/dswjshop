@@ -204,14 +204,11 @@ class CenterAction extends HomeAction {
 		$user=D('User');
 		$money=M('money');
 		$userinfo=M('userinfo');
-		$message=reset($userinfo->field('certification,bank,bank_name,bank_account')->where('`uid`="'.$this->_session('user_uid').'"')->select());//获取姓名、银行帐号信息用来判断
-		if($message['certification']!=='2'){
-			$this->error("请先通过实名认证",'__ROOT__/Center/approve/autonym.html');
-		}
+		$message=$userinfo->field('certification,bank,bank_name,bank_account')->where('`uid`="'.$this->_session('user_uid').'"')->find();//获取姓名、银行帐号信息用来判断
 		if(!$message['bank'] || !$message['bank_name'] || !$message['bank_account'] ){
 			$this->error("请先填写银行账户",'__ROOT__/Center/fund/mid/bank.html');
 		}
-		$moneys=reset($money->field('total_money,available_funds,freeze_funds')->where('`uid`="'.$this->_session('user_uid').'"')->select());
+		$moneys=$money->field('total_money,available_funds,freeze_funds')->where('`uid`="'.$this->_session('user_uid').'"')->find();
 		$pay_password=$user->where('`id`="'.$this->_session('user_uid').'"')->getField('pay_password');
 			if($this->_post('money')<=$moneys['available_funds']){	//提现金额必须小于可用余额
 				if($create=$withdrawal->create()){
@@ -254,7 +251,7 @@ class CenterAction extends HomeAction {
 				$moneyarr['freeze_funds']=$moneys['freeze_funds']-$withdrawals['money'];
 				$money->where(array('uid'=>$this->_session('user_uid')))->save($moneyarr);
 				$this->moneyLog(array(0,'提现撤销',$withdrawals['money'],'平台',$moneys['total_money'],$moneyarr['available_funds'],$moneyarr['freeze_funds']),5);	//资金记录
-				$this->success('提现撤销成功', '__ROOT__/fund/mid/drawrecord.html');
+				$this->success('提现撤销成功', '__ROOT__/Center/fund/mid/drawrecord.html');
 			}else{
 				$this->error("提现撤销失败");
 			}
